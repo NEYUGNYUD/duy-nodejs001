@@ -46,7 +46,9 @@ let getDataWeb = async function(pars, callback) {
                 }
             })
         } catch (error) {
-            console.log(error);
+            resInfor.sucess = 'false';
+            resInfor.message = 'Không thể khởi động selenium/phantomjs/puppeteer.';
+            await callback(resInfor);
         } finally {
             // browser.close();
         }
