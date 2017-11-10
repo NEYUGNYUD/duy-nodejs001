@@ -1,46 +1,54 @@
 /**
  * Created by duype on 11/5/2017.
  */
-const url = require('url');
 const puppeteer = require('puppeteer');
+const spt = require('./query_script');
+const jsonScript = require('./script');
 
-var getDataWeb = async function(req) {
-        //store information of response
-        let resInfor = {};
-        let addr = await url.parse(req.url, true);
-        let browser = await puppeteer.launch({headless: false});
+//parameter 'pars' is an array of variable in url
+let getDataWeb = async function(pars, callback) {
+        let resInfor = {};//store information about response
+        let js = jsonScript.sp;
+        let browser = await puppeteer.launch({headless: false, timeout: 0});
         let page = await browser.newPage();
         try {
-            let resTem = await page.goto("http://www." + addr.query.p);//return response
-            if (resTem.status == 200) {
-                resInfor.sucess = 'true';
-                resInfor.message = 'ok';
-                resInfor.data = {};
-                //get cookies
-                let temp = await page.cookies(page.url());
-                resInfor.data.cookie = temp;
-                //get header
-                temp = await resTem.headers;
-                resInfor.data.header = temp;
-                //get html
-                temp = await page.content();
-                resInfor.data.html = temp;
-                // console.log(temp);
-                console.log('response received');
-                browser.close();
-                return resInfor;
-            } else {
-                console.log('***Error: Response is not received succeccful***');
-                resInfor.sucess = 'false';
-                resInfor.message = 'Không thể khởi động selenium/phantomjs/puppeteer.';
-                browser.close();
-                return resInfor;
+            //scan all element in script
+            for(let i = 0; i < js.length; i++) {
+                await spt.queryScript(js[i], page);
             }
+            await page.on('response', async (resTem) => {
+                // console.log(resTem);
+                if (resTem.status == 200) {
+                    resInfor.sucess = 'true';
+                    resInfor.message = 'ok';
+                    if(pars.type != '') {
+                        if(pars.type == 'cookie') {
+                            let temp = await page.cookies(page.url());
+                            resInfor.cookie = temp;
+                            console.log('process cookie.....');
+                            await callback(resInfor);
+                            return;
+                        } else if(pars.type == 'header') {
+                            let temp = await resTem.headers;
+                            resInfor.header = temp;
+                            await callback(resInfor);
+
+                        } else if(pars.type == 'html') {
+                            let temp = await page.content();
+                            resInfor.html = temp;
+                            await callback(resInfor);
+                        }
+                    }
+                } else {
+                    resInfor.sucess = 'false';
+                    resInfor.message = 'Không thể khởi động selenium/phantomjs/puppeteer.';
+                    await callback(resInfor);
+                }
+            })
         } catch (error) {
-            resInfor.sucess = 'false';
-            resInfor.message = 'Không thể khởi động selenium/phantomjs/puppeteer.';
-            browser.close();
-            return resInfor;
+            console.log(error);
+        } finally {
+            // browser.close();
         }
     };
 module.exports.getData = getDataWeb;
