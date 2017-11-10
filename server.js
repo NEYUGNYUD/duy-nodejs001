@@ -1,14 +1,19 @@
-var http = require('http');
+const http = require('http');
+const url = require('url');
 var getDataWeb = require('./puppeteer/get_data_website');
 // const puppeteer = require('puppeteer');
 
 http.createServer(async function (req, res) {
-    var resInfor = await getDataWeb.getData(req);
-    var jsonResInfor = JSON.stringify(resInfor);
-    res.writeHead(200, {'Content-Type':'application/json'});
-    // res.write(resInfor);
-    res.write(jsonResInfor);
-    res.end();
+    let responseInfor;
+    let pars = await url.parse(req.url, true).query;//url consist of one parameter named 'type' represents type of returned data
+    await getDataWeb.getData(pars, (resInfor) => {
+        responseInfor = JSON.stringify(resInfor);
+        console.log(".............................." + responseInfor);
+        res.writeHead(200, {'Content-Type':'application/json'});
+        res.write(responseInfor);
+        res.end();
+    });
+    // let jsonResInfor = JSON.stringify(responseInfor);
 }).listen(80);
 console.log('port 80');
 
