@@ -8,7 +8,6 @@ http.createServer(async function (req, res) {
     let pars = await url.parse(req.url, true).query;//url consist of one parameter named 'type' represents type of returned data
     await getDataWeb.getData(pars, (resInfor) => {
         responseInfor = JSON.stringify(resInfor);
-        // console.log(".............................." + responseInfor);
         res.writeHead(200, {'Content-Type':'application/json'});
         res.write(responseInfor);
         res.end();
