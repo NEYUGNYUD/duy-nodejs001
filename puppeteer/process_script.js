@@ -1,17 +1,17 @@
-var queryScript = async function (ele, page) {
-    let res;
-    if(ele.type === 'visit') {
-        let url = ele.url;
-        res = await page.goto(url);
-        // console.log(res);
-    } else if(ele.type === 'input') {
-        await page.click(ele.selector);
-        await page.keyboard.type(ele.value);
-    } else if(ele.type === 'submit') {
-        await page.click(ele.selector);
-        await page.waitForNavigation();
+var processScript = async function (page, scriptData) {
+    let s = JSON.parse(scriptData);
+    for(let i = 0; i < s.length; i++) {
+        if(s[i].type === 'visit') {
+            let scriptUrl = s[i].url;
+            await page.goto(scriptUrl);
+        } else if(s[i].type === 'input') {
+            await page.click(s[i].selector);
+            await page.keyboard.type(s[i].value);
+        } else if(s[i].type === 'submit') {
+            await page.click(s[i].selector);
+            await page.waitForNavigation();
+        }
     }
-    return res;
 };
 
-module.exports.queryScript = queryScript;
+module.exports.processScript = processScript;
